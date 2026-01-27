@@ -15,4 +15,4 @@ This repository contains:
 - *r_squared.R* contains the main effect of the socio-economic covariates included in the analysis
 - The files ending with *int.R* includes the effect modification analysis for each climatic variable
 - *control_lags.R* and *control_micro.R* contain the sensitivity analyses reported in the manuscript
-- *Data_simulation_malaria.qmd* contains the demo of the original analysis with a simulation of the data
+- *Data_simulation_malaria.qmd* and *Data_simulation_malaria.html* contains the demo of the original analysis with a simulation of the data
