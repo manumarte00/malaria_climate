@@ -1,0 +1,301 @@
+---
+title: "Malaria_analysis_simulation"
+format: html
+editor: visual
+---
+
+## Introduction
+
+This script replicates the analyses from the original paper "*Climatic Drivers of Malaria risk in Children Under Five: A Large-Scale Analysis of individual-level data for 350,000 children in 26 Sub-Saharan African Countries*" using simulated data. It includes both the data simulation and subsequent analysis, generating results that mirror those of the original study. For simplicity, the script considers only temperature, but it can be readily extended to include the full set of variables examined in the paper.
+
+### Importing libraries
+
+The following libraries need to be imported:
+
+```{r}
+library(glmmTMB)
+library(dlnm)
+library(splines)
+library(lubridate)
+```
+
+For reproducibility:
+
+```{r}
+set.seed(15)
+```
+
+## Simulating original data
+
+Since the original DHS dataset cannot be shared, the data used here are simulated.
+
+The original study employed a three-level mixed-effects logistic regression model, and the simulated data are generated according to this model.
+
+The simulation begins by assigning a malaria testing month to each subject. For computational reasons, all tests are assumed to occur on the first day of the assigned month. The study period spans from 2006 to 2023, matching the time frame of the original paper. For each subject, the malaria testing date is randomly sampled within this period. In order to to accommodate the inclusion of lagged exposures, sampling begins in August 2006.
+
+```{r}
+n <- 348565
+
+study_start <- as.Date("2006-01-01")
+study_end <- as.Date("2023-12-01")
+
+dates <-  seq.Date(from = study_start, to = study_end, by = "month")
+
+months <- month(dates)
+
+years <- year(dates)
+
+test_date <- sample(seq.Date(from = as.Date("2006-08-01"), to = study_end, by = "month"), n, replace = TRUE)
+
+data <- data.frame(id = 1:n, month = month(test_date), year = year(test_date), date = test_date)
+
+head(data)
+```
+
+The next step consists of simulating the climatic variable. As said before, only temperature is considered. In this simulation, exposure is assumed to be common to all subjects, such that all individuals experience the same levels of temperature and precipitation on a given day. Temperature is created through a seasonal trend and random deviations across this seasonal trend. This approach follows the methodology described by Gasparrini \[1\].
+
+```{r}
+cos_month <- function(m) 26 + 6*cos((m + 2)*2*pi / 12)
+
+monthly_temp <- as.numeric(cos_month(months) + arima.sim(list(ar = 0.5), length(cos_month(months)), sd = 2))
+
+par(mfrow = c(1, 2))
+
+plot(seq(1, 12, by = 0.1), cos_month(seq(1, 12, by = 0.1)), type = "l", col = 2, ylab = "cos(month)", xlab = "month")
+
+plot(dates, monthly_temp, xlab = "Date", ylab = "Temperature", main = "Temperature series",
+     col = 2, pch = 19)
+```
+
+Temperature values are then combined into a single dataset, where each row corresponds to a month and the associated temperature and precipitation values.
+
+```{r}
+clim_var <- data.frame(date = dates, temp = monthly_temp)
+
+head(clim_var)
+```
+
+We now construct the exposure histories for each observation by linking the temperature to the malaria testing date. The lags considered in the main analysis are from 1 to 6 months, and this is reflected in the simulation.
+
+```{r}
+month_temp <- function(i) {
+  pos <- which(as.Date(i[4]) == clim_var$date)
+  clim_var$temp[(pos - 1):(pos - 1 - 5)]
+}
+
+exp_hist_temp <- t(apply(data, MARGIN = 1, FUN = month_temp))
+
+colnames(exp_hist_temp) <- paste0("temp_lag", 1:6)
+
+head(exp_hist_temp)
+```
+
+The next step involves simulating the exposure-lag-response relationship for temperature, designed to approximate those used in the original analysis. For the purposes of simulation, the exposure-response and lag-response components are specified independently. Polynomial functions are used for simplicity.
+
+```{r}
+# exposure-response temperature
+A <- matrix(c(19^3, 19^2, 19, 1, 24^3, 24^2, 24, 1, 26^3, 26^2, 26, 1, 33^3, 33^2, 33, 1), byrow = TRUE, ncol = 4)
+b <- c(-0.4, 0.2, 0, 0.1)
+
+quadr1 <- solve(A, b)
+
+f_temp <- function(x) quadr1[1]*x^3 + quadr1[2]*x^2 + quadr1[3]*x + quadr1[4]
+
+par(mfrow = c(1, 2))
+
+plot(seq(18, 30, by = 0.01), f_temp(seq(18, 30, by = 0.01)), type = "l", xlab = "Temperature", ylab = "Effect", main = "Exposure-response", col = 2)
+abline(h = 0)
+
+# Lag-response
+l <- 6
+k <- -l/log(0.0055)
+f_lag <- function(lag) exp(-(lag - 1) / k)
+
+plot(seq(1, l, 0.1), f_lag(seq(1, l, 0.1)), type = "l", xlab = "Lag", ylab = "Effect",
+           main = "Lag structure", col = 2)
+```
+
+The effects for each component are then obtained. The intercept and the coefficients associated to month and year were estimated by fitting a model on the original data that included only these variables.
+
+```{r}
+# effect of temperature
+eff_temp <- apply(exp_hist_temp, MARGIN = 1, function(x) sum(f_temp(x) * f_lag(1:6)))
+
+# effect of month variable
+coef_month <- c(-0.19, 0.28, -0.41, 0.42)
+eff_month <- ns(data$month, df = 4) %*% coef_month
+
+# effect of year variable
+data$year <- data$year - 2005
+coef_year <- -0.09
+eff_year <- coef_year * data$year
+
+# intercept
+int <- -0.5
+```
+
+The last thing to simulate is the clustering effect from the two grouping factors, namely country and cluster. The number of clusters and countries resembles the original data. Standard errors for the two random intercepts were also obtained from the model with original data.
+
+```{r}
+#cluster
+n_clusters <- 25813
+
+k <- n %/% n_clusters
+r <- n %% n_clusters
+
+cluster_sizes <- c(rep(k + 1, r),
+rep(k, n_clusters - r))
+
+data$cluster <- rep(1:n_clusters, cluster_sizes)
+
+# country
+n_country <- 26
+
+k <- n %/% n_country
+r <- n %% n_country
+
+country_sizes <- c(rep(k + 1, r),
+rep(k, n_country - r))
+
+data$country <- rep(1:n_country, country_sizes)
+
+# random intercepts
+sd_country <- 1.615
+int_country <- rnorm(n = n_country, mean = 0, sd = sd_country)
+int_country <- int_country[data$country]
+
+sd_cluster <- 1.571
+int_clusters <- rnorm(n = n_clusters, mean = 0, sd = sd_cluster)
+int_clusters <- int_clusters[data$cluster]
+```
+
+It is now time to simulate the outcome. `suppressWarnings()` is used for missing values.
+
+```{r}
+suppressWarnings(data$y <- rbinom(n, 1, p = plogis(int + eff_temp + eff_month + eff_year + int_clusters + int_country)))
+
+table(data$y)
+
+table(data$y)/sum(table(data$y))
+```
+
+## Analysis
+
+We can now replicate the analysis of the main paper, using the package `glmmTMB` to fit a three-level mixed effects logistic regression. Given the large number of observations, the function may take some minutes to run on a local computer. Reducing the number of observations can shorten computation time if needed.
+
+```{r}
+# temperature
+cross_avg_temp <- crossbasis(exp_hist_temp, lag = c(1, 6), argvar = list(fun = "ns", df = 3), arglag = list(fun = "ns", df = 3))
+
+mixed_log <- glmmTMB(y ~ cross_avg_temp + ns(month, df = 4) + year + (1 | cluster) + (1 | country), data = data, family = binomial(link = "logit"), control = glmmTMBControl(optCtrl = list(iter.max = 1000, eval.max = 1000)))
+
+ref <- 26
+
+pred_avg_temp <- crosspred(cross_avg_temp, coef = summary(mixed_log)$coef$cond[,1][2:(ncol(cross_avg_temp) + 1)], vcov = vcov(mixed_log)$cond[2:(ncol(cross_avg_temp) + 1), 2:(ncol(cross_avg_temp) + 1)], cen = ref, model.link = "logit", at = seq(from = 18, to = 30, by = 0.1), bylag = 0.1, cumul = TRUE)
+
+par(mfrow = c(1, 1))
+
+plot(pred_avg_temp, "overall", lwd = 1.5, main = "Overall effect of average temperature, ref. 26°C", ylab = "OR", xlab = "Average Temperature (°C)", ci.arg = list(col = adjustcolor(1, alpha.f = 0.2)))
+```
+
+### Interactions
+
+The following code illustrates how the interaction between the cross-basis matrix and an effect modifier was implemented in the original analysis. In this script, the interaction between a binary variable and a numerical variable is considered. Further details on interaction effects are provided in the Supplementary Material of the paper.
+
+The variables are generated randomly, so no true effect is expected. This example is intended solely for illustrative purposes.
+
+The binary variable is simulated from a bernoulli distribution with $p = 0.5$, and the numerical variable is simulated from a standard normal distribution. They can be interpreted as a gender variable and a wealth index, respectively.
+
+```{r}
+# simulation gender
+# reference category (0) = female
+data$gender <- rbinom(n, size = 1, p = 0.5)
+
+# simulation wealth index
+data$index <- rnorm(n)
+```
+
+We start with the binary variable. An interaction between the cross-basis matrix and gender is specified and included in the model.
+
+```{r}
+mixed_log <- glmmTMB(y ~ cross_avg_temp*gender + ns(month, df = 4) + year + (1 | cluster) + (1 | country), data = data, family = binomial(link = "logit"), control = glmmTMBControl(optCtrl = list(iter.max = 1000, eval.max = 1000)))
+
+pred_avg_temp_sexF <- crosspred(cross_avg_temp, coef = summary(mixed_log)$coef$cond[,1][2:(ncol(cross_avg_temp) + 1)], vcov = vcov(mixed_log)$cond[2:(ncol(cross_avg_temp) + 1), 2:(ncol(cross_avg_temp) + 1)], cen = ref, model.link = "logit", at = seq(from = 18, to = 30, by = 0.1), cumul = TRUE)
+
+b1 <- summary(mixed_log)$coef$cond[,1][2:(ncol(cross_avg_temp) + 1)]
+
+b2 <- summary(mixed_log)$coef$cond[, 1][(nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond))]
+
+sum_b1_b2 <- b1 + b2
+
+V_b1 <- vcov(mixed_log)$cond[2:(ncol(cross_avg_temp) + 1), 2:(ncol(cross_avg_temp) + 1)]
+
+V_b2 <- vcov(mixed_log)$cond[(nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond)), (nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond))]
+
+V_b1_b2 <- vcov(mixed_log)$cond[2:(ncol(cross_avg_temp) + 1), (nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond))]
+
+V_tot <- V_b1 + V_b2 + V_b1_b2 + t(V_b1_b2)
+
+rownames(V_tot) <- c()
+colnames(V_tot) <- c()
+
+pred_avg_temp_sexM <- crosspred(cross_avg_temp, coef = sum_b1_b2, vcov = V_tot, cen = ref, model.link = "logit", at = seq(from = 18, to = 30, by = 0.1), cumul = TRUE)
+
+plot(pred_avg_temp_sexF, "overall", lwd = 1.5, main = "Overall effect of average temperature, ref. 26°C", ylab = "OR", xlab = "Average Temperature (°C)", ci.arg = list(col = adjustcolor(1, alpha.f = 0.2)), ylim = c(min(c(pred_avg_temp_sexF$cumRRlow[, 6], pred_avg_temp_sexM$cumRRlow[, 6])), max(c(pred_avg_temp_sexF$cumRRhigh[, 6], pred_avg_temp_sexM$cumRRhigh[, 6]))))
+lines(pred_avg_temp_sexM, "overall", ci = "area", lwd = 1.5, main = "Overall effect of average temperature, ref. 26°C", ylab = "OR", col = 2, ci.arg = list(col = adjustcolor(2, alpha.f = 0.2)))
+legend("topright", paste("Sex =", c("Female", "Male")), col = 1:2, lwd = 1.5)
+```
+
+The Likelihood Ratio Test (LRT) is specified as:
+
+```{r}
+mixed_log0 <- glmmTMB(y ~ cross_avg_temp + gender + ns(month, df = 4) + year + (1 | cluster) + (1 | country), data = data, family = binomial(link = "logit"), control = glmmTMBControl(optCtrl = list(iter.max = 1000, eval.max = 1000)))
+
+anova(mixed_log0, mixed_log, test = "Chisq")
+```
+
+We continue with the numerical variable. Effects are evaluated at the 1st and 3rd quartile.
+
+```{r}
+mixed_log <- glmmTMB(y ~ cross_avg_temp*index + ns(month, df = 4) + year + (1 | cluster) + (1 | country), data = data, family = binomial(link = "logit"), control = glmmTMBControl(optCtrl = list(iter.max = 1000, eval.max = 1000)))
+
+quant <- quantile(data$index, c(0.25, 0.75), na.rm = TRUE)
+
+b1 <- summary(mixed_log)$coef$cond[,1][2:(ncol(cross_avg_temp) + 1)]
+
+b2 <- summary(mixed_log)$coef$cond[, 1][(nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond))]
+
+sum_b1_b2 <- b1 + b2*quant[1]
+
+V_b1 <- vcov(mixed_log)$cond[2:(ncol(cross_avg_temp) + 1), 2:(ncol(cross_avg_temp) + 1)]
+
+V_b2 <- vcov(mixed_log)$cond[(nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond)), (nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond))]
+
+V_b1_b2 <- vcov(mixed_log)$cond[2:(ncol(cross_avg_temp) + 1), (nrow((summary(mixed_log)$coef$cond)) - ncol(cross_avg_temp) + 1):nrow((summary(mixed_log)$coef$cond))]
+
+V_tot <- V_b1 + (quant[1]^2)*V_b2 + quant[1]*(V_b1_b2 + t(V_b1_b2))
+
+pred_avg_temp_indexL <- crosspred(cross_avg_temp, coef = sum_b1_b2, vcov = V_tot, cen = ref, model.link = "logit", at = seq(from = 18, to = 30, by = 0.1), cumul = TRUE)
+
+sum_b1_b2 <- b1 + b2*quant[2]
+
+V_tot <- V_b1 + (quant[2]^2)*V_b2 + quant[2]*(V_b1_b2 + t(V_b1_b2))
+
+pred_avg_temp_indexH <- crosspred(cross_avg_temp, coef = sum_b1_b2, vcov = V_tot, cen = ref, model.link = "logit", at = seq(from = 18, to = 30, by = 0.1), cumul = TRUE)
+
+plot(pred_avg_temp_indexL, "overall", lwd = 1.5, main = "Overall effect of average temperature, ref. 26°C", ylab = "OR", xlab = "Average Temperature (°C)", ci.arg = list(col = adjustcolor(1, alpha.f = 0.2)), ylim = c(min(c(pred_avg_temp_indexL$cumRRlow[, 6], pred_avg_temp_indexH$cumRRlow[, 6])), max(c(pred_avg_temp_indexL$cumRRhigh[, 6], pred_avg_temp_indexH$cumRRhigh[, 6]))))
+lines(pred_avg_temp_indexH, "overall", ci = "area", lwd = 1.5, main = "Overall effect of average temperature, ref. 26°C", ylab = "OR", col = 2, ci.arg = list(col = adjustcolor(2, alpha.f = 0.2)))
+legend("topright", c("Low wealth index", "High wealth index"), col = 1:2, lwd = 1.5)
+```
+
+The LRT is specified as:
+
+```{r}
+mixed_log0 <- glmmTMB(y ~ cross_avg_temp + index + ns(month, df = 4) + year + (1 | cluster) + (1 | country), data = data, family = binomial(link = "logit"), control = glmmTMBControl(optCtrl = list(iter.max = 1000, eval.max = 1000)))
+
+anova(mixed_log0, mixed_log, test = "Chisq")
+```
+
+## References
+
+\[1\] Gasparrini, Antonio. "A tutorial on the case time series design for small-area analysis." BMC medical research methodology 22.1 (2022): 129.

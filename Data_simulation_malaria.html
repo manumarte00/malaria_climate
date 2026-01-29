@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Malaria_analysis_simulation</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Data_simulation_malaria_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Data_simulation_malaria_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="Data_simulation_malaria_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="Data_simulation_malaria_files/libs/quarto-html/popper.min.js"></script>
+<script src="Data_simulation_malaria_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Data_simulation_malaria_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Data_simulation_malaria_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Data_simulation_malaria_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Data_simulation_malaria_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Data_simulation_malaria_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Data_simulation_malaria_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Malaria_analysis_simulation</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>This script replicates the analyses from the original paper “<em>Climatic Drivers of Malaria risk in Children Under Five: A Large-Scale Analysis of individual-level data for 350,000 children in 26 Sub-Saharan African Countries</em>” using simulated data. It includes both the data simulation and subsequent analysis, generating results that mirror those of the original study. For simplicity, the script considers only temperature, but it can be readily extended to include the full set of variables examined in the paper.</p>
+<section id="importing-libraries" class="level3">
+<h3 class="anchored" data-anchor-id="importing-libraries">Importing libraries</h3>
+<p>The following libraries need to be imported:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmmTMB)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dlnm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>This is dlnm 2.4.7. For details: help(dlnm) and vignette('dlnmOverview').</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(splines)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: package 'lubridate' was built under R version 4.4.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'lubridate'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union</code></pre>
+</div>
+</div>
+<p>For reproducibility:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">15</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="simulating-original-data" class="level2">
+<h2 class="anchored" data-anchor-id="simulating-original-data">Simulating original data</h2>
+<p>Since the original DHS dataset cannot be shared, the data used here are simulated.</p>
+<p>The original study employed a three-level mixed-effects logistic regression model, and the simulated data are generated according to this model.</p>
+<p>The simulation begins by assigning a malaria testing month to each subject. For computational reasons, all tests are assumed to occur on the first day of the assigned month. The study period spans from 2006 to 2023, matching the time frame of the original paper. For each subject, the malaria testing date is randomly sampled within this period. In order to to accommodate the inclusion of lagged exposures, sampling begins in August 2006.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">348565</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>study_start <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2006-01-01"</span>)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>study_end <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2023-12-01"</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>dates <span class="ot">&lt;-</span>  <span class="fu">seq.Date</span>(<span class="at">from =</span> study_start, <span class="at">to =</span> study_end, <span class="at">by =</span> <span class="st">"month"</span>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>months <span class="ot">&lt;-</span> <span class="fu">month</span>(dates)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>years <span class="ot">&lt;-</span> <span class="fu">year</span>(dates)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>test_date <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="fu">seq.Date</span>(<span class="at">from =</span> <span class="fu">as.Date</span>(<span class="st">"2006-08-01"</span>), <span class="at">to =</span> study_end, <span class="at">by =</span> <span class="st">"month"</span>), n, <span class="at">replace =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span>n, <span class="at">month =</span> <span class="fu">month</span>(test_date), <span class="at">year =</span> <span class="fu">year</span>(test_date), <span class="at">date =</span> test_date)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  id month year       date
+1  1     8 2009 2009-08-01
+2  2     5 2015 2015-05-01
+3  3     1 2020 2020-01-01
+4  4     9 2009 2009-09-01
+5  5     4 2021 2021-04-01
+6  6    12 2006 2006-12-01</code></pre>
+</div>
+</div>
+<p>The next step consists of simulating the climatic variable. As said before, only temperature is considered. In this simulation, exposure is assumed to be common to all subjects, such that all individuals experience the same levels of temperature and precipitation on a given day. Temperature is created through a seasonal trend and random deviations across this seasonal trend. This approach follows the methodology described by Gasparrini [1].</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>cos_month <span class="ot">&lt;-</span> <span class="cf">function</span>(m) <span class="dv">26</span> <span class="sc">+</span> <span class="dv">6</span><span class="sc">*</span><span class="fu">cos</span>((m <span class="sc">+</span> <span class="dv">2</span>)<span class="sc">*</span><span class="dv">2</span><span class="sc">*</span>pi <span class="sc">/</span> <span class="dv">12</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>monthly_temp <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">cos_month</span>(months) <span class="sc">+</span> <span class="fu">arima.sim</span>(<span class="fu">list</span>(<span class="at">ar =</span> <span class="fl">0.5</span>), <span class="fu">length</span>(<span class="fu">cos_month</span>(months)), <span class="at">sd =</span> <span class="dv">2</span>))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">12</span>, <span class="at">by =</span> <span class="fl">0.1</span>), <span class="fu">cos_month</span>(<span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">12</span>, <span class="at">by =</span> <span class="fl">0.1</span>)), <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">ylab =</span> <span class="st">"cos(month)"</span>, <span class="at">xlab =</span> <span class="st">"month"</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(dates, monthly_temp, <span class="at">xlab =</span> <span class="st">"Date"</span>, <span class="at">ylab =</span> <span class="st">"Temperature"</span>, <span class="at">main =</span> <span class="st">"Temperature series"</span>,</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>     <span class="at">col =</span> <span class="dv">2</span>, <span class="at">pch =</span> <span class="dv">19</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_simulation_malaria_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Temperature values are then combined into a single dataset, where each row corresponds to a month and the associated temperature and precipitation values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>clim_var <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">date =</span> dates, <span class="at">temp =</span> monthly_temp)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(clim_var)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        date     temp
+1 2006-01-01 27.86089
+2 2006-02-01 25.92855
+3 2006-03-01 20.42303
+4 2006-04-01 18.59662
+5 2006-05-01 17.96625
+6 2006-06-01 19.00561</code></pre>
+</div>
+</div>
+<p>We now construct the exposure histories for each observation by linking the temperature to the malaria testing date. The lags considered in the main analysis are from 1 to 6 months, and this is reflected in the simulation.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>month_temp <span class="ot">&lt;-</span> <span class="cf">function</span>(i) {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  pos <span class="ot">&lt;-</span> <span class="fu">which</span>(<span class="fu">as.Date</span>(i[<span class="dv">4</span>]) <span class="sc">==</span> clim_var<span class="sc">$</span>date)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  clim_var<span class="sc">$</span>temp[(pos <span class="sc">-</span> <span class="dv">1</span>)<span class="sc">:</span>(pos <span class="sc">-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="dv">5</span>)]</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>exp_hist_temp <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">apply</span>(data, <span class="at">MARGIN =</span> <span class="dv">1</span>, <span class="at">FUN =</span> month_temp))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(exp_hist_temp) <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"temp_lag"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(exp_hist_temp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     temp_lag1 temp_lag2 temp_lag3 temp_lag4 temp_lag5 temp_lag6
+[1,]  23.58660  22.67637  18.20607  16.90500  21.37727  24.77207
+[2,]  19.45951  20.77139  24.52420  29.68172  26.83105  29.73659
+[3,]  23.49888  30.35210  33.06920  30.51952  26.24416  22.64085
+[4,]  30.20876  23.58660  22.67637  18.20607  16.90500  21.37727
+[5,]  19.45880  22.00052  24.10039  26.90539  33.29477  32.86187
+[6,]  33.52817  32.16411  29.85552  28.18672  24.17483  19.00561</code></pre>
+</div>
+</div>
+<p>The next step involves simulating the exposure-lag-response relationship for temperature, designed to approximate those used in the original analysis. For the purposes of simulation, the exposure-response and lag-response components are specified independently. Polynomial functions are used for simplicity.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># exposure-response temperature</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>A <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">19</span><span class="sc">^</span><span class="dv">3</span>, <span class="dv">19</span><span class="sc">^</span><span class="dv">2</span>, <span class="dv">19</span>, <span class="dv">1</span>, <span class="dv">24</span><span class="sc">^</span><span class="dv">3</span>, <span class="dv">24</span><span class="sc">^</span><span class="dv">2</span>, <span class="dv">24</span>, <span class="dv">1</span>, <span class="dv">26</span><span class="sc">^</span><span class="dv">3</span>, <span class="dv">26</span><span class="sc">^</span><span class="dv">2</span>, <span class="dv">26</span>, <span class="dv">1</span>, <span class="dv">33</span><span class="sc">^</span><span class="dv">3</span>, <span class="dv">33</span><span class="sc">^</span><span class="dv">2</span>, <span class="dv">33</span>, <span class="dv">1</span>), <span class="at">byrow =</span> <span class="cn">TRUE</span>, <span class="at">ncol =</span> <span class="dv">4</span>)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.4</span>, <span class="fl">0.2</span>, <span class="dv">0</span>, <span class="fl">0.1</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>quadr1 <span class="ot">&lt;-</span> <span class="fu">solve</span>(A, b)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>f_temp <span class="ot">&lt;-</span> <span class="cf">function</span>(x) quadr1[<span class="dv">1</span>]<span class="sc">*</span>x<span class="sc">^</span><span class="dv">3</span> <span class="sc">+</span> quadr1[<span class="dv">2</span>]<span class="sc">*</span>x<span class="sc">^</span><span class="dv">2</span> <span class="sc">+</span> quadr1[<span class="dv">3</span>]<span class="sc">*</span>x <span class="sc">+</span> quadr1[<span class="dv">4</span>]</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>))</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">seq</span>(<span class="dv">18</span>, <span class="dv">30</span>, <span class="at">by =</span> <span class="fl">0.01</span>), <span class="fu">f_temp</span>(<span class="fu">seq</span>(<span class="dv">18</span>, <span class="dv">30</span>, <span class="at">by =</span> <span class="fl">0.01</span>)), <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">xlab =</span> <span class="st">"Temperature"</span>, <span class="at">ylab =</span> <span class="st">"Effect"</span>, <span class="at">main =</span> <span class="st">"Exposure-response"</span>, <span class="at">col =</span> <span class="dv">2</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="fu">abline</span>(<span class="at">h =</span> <span class="dv">0</span>)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Lag-response</span></span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>l <span class="ot">&lt;-</span> <span class="dv">6</span></span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> <span class="sc">-</span>l<span class="sc">/</span><span class="fu">log</span>(<span class="fl">0.0055</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>f_lag <span class="ot">&lt;-</span> <span class="cf">function</span>(lag) <span class="fu">exp</span>(<span class="sc">-</span>(lag <span class="sc">-</span> <span class="dv">1</span>) <span class="sc">/</span> k)</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(<span class="fu">seq</span>(<span class="dv">1</span>, l, <span class="fl">0.1</span>), <span class="fu">f_lag</span>(<span class="fu">seq</span>(<span class="dv">1</span>, l, <span class="fl">0.1</span>)), <span class="at">type =</span> <span class="st">"l"</span>, <span class="at">xlab =</span> <span class="st">"Lag"</span>, <span class="at">ylab =</span> <span class="st">"Effect"</span>,</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>           <span class="at">main =</span> <span class="st">"Lag structure"</span>, <span class="at">col =</span> <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_simulation_malaria_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The effects for each component are then obtained. The intercept and the coefficients associated to month and year were estimated by fitting a model on the original data that included only these variables.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># effect of temperature</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>eff_temp <span class="ot">&lt;-</span> <span class="fu">apply</span>(exp_hist_temp, <span class="at">MARGIN =</span> <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="fu">sum</span>(<span class="fu">f_temp</span>(x) <span class="sc">*</span> <span class="fu">f_lag</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>)))</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># effect of month variable</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>coef_month <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="sc">-</span><span class="fl">0.19</span>, <span class="fl">0.28</span>, <span class="sc">-</span><span class="fl">0.41</span>, <span class="fl">0.42</span>)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>eff_month <span class="ot">&lt;-</span> <span class="fu">ns</span>(data<span class="sc">$</span>month, <span class="at">df =</span> <span class="dv">4</span>) <span class="sc">%*%</span> coef_month</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co"># effect of year variable</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>year <span class="ot">&lt;-</span> data<span class="sc">$</span>year <span class="sc">-</span> <span class="dv">2005</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>coef_year <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.09</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>eff_year <span class="ot">&lt;-</span> coef_year <span class="sc">*</span> data<span class="sc">$</span>year</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># intercept</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>int <span class="ot">&lt;-</span> <span class="sc">-</span><span class="fl">0.5</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The last thing to simulate is the clustering effect from the two grouping factors, namely country and cluster. The number of clusters and countries resembles the original data. Standard errors for the two random intercepts were also obtained from the model with original data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#cluster</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>n_clusters <span class="ot">&lt;-</span> <span class="dv">25813</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> n <span class="sc">%/%</span> n_clusters</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> n <span class="sc">%%</span> n_clusters</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>cluster_sizes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(k <span class="sc">+</span> <span class="dv">1</span>, r),</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rep</span>(k, n_clusters <span class="sc">-</span> r))</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>cluster <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span>n_clusters, cluster_sizes)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># country</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>n_country <span class="ot">&lt;-</span> <span class="dv">26</span></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>k <span class="ot">&lt;-</span> n <span class="sc">%/%</span> n_country</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>r <span class="ot">&lt;-</span> n <span class="sc">%%</span> n_country</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>country_sizes <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fu">rep</span>(k <span class="sc">+</span> <span class="dv">1</span>, r),</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="fu">rep</span>(k, n_country <span class="sc">-</span> r))</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>country <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">1</span><span class="sc">:</span>n_country, country_sizes)</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="co"># random intercepts</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>sd_country <span class="ot">&lt;-</span> <span class="fl">1.615</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>int_country <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n_country, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> sd_country)</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>int_country <span class="ot">&lt;-</span> int_country[data<span class="sc">$</span>country]</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>sd_cluster <span class="ot">&lt;-</span> <span class="fl">1.571</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>int_clusters <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(<span class="at">n =</span> n_clusters, <span class="at">mean =</span> <span class="dv">0</span>, <span class="at">sd =</span> sd_cluster)</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>int_clusters <span class="ot">&lt;-</span> int_clusters[data<span class="sc">$</span>cluster]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>It is now time to simulate the outcome. <code>suppressWarnings()</code> is used for missing values.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">suppressWarnings</span>(data<span class="sc">$</span>y <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="at">p =</span> <span class="fu">plogis</span>(int <span class="sc">+</span> eff_temp <span class="sc">+</span> eff_month <span class="sc">+</span> eff_year <span class="sc">+</span> int_clusters <span class="sc">+</span> int_country)))</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(data<span class="sc">$</span>y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+     0      1 
+281018  67547 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(data<span class="sc">$</span>y)<span class="sc">/</span><span class="fu">sum</span>(<span class="fu">table</span>(data<span class="sc">$</span>y))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+       0        1 
+0.806214 0.193786 </code></pre>
+</div>
+</div>
+</section>
+<section id="analysis" class="level2">
+<h2 class="anchored" data-anchor-id="analysis">Analysis</h2>
+<p>We can now replicate the analysis of the main paper, using the package <code>glmmTMB</code> to fit a three-level mixed effects logistic regression. Given the large number of observations, the function may take some minutes to run on a local computer. Reducing the number of observations can shorten computation time if needed.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># temperature</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>cross_avg_temp <span class="ot">&lt;-</span> <span class="fu">crossbasis</span>(exp_hist_temp, <span class="at">lag =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">6</span>), <span class="at">argvar =</span> <span class="fu">list</span>(<span class="at">fun =</span> <span class="st">"ns"</span>, <span class="at">df =</span> <span class="dv">3</span>), <span class="at">arglag =</span> <span class="fu">list</span>(<span class="at">fun =</span> <span class="st">"ns"</span>, <span class="at">df =</span> <span class="dv">3</span>))</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>mixed_log <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(y <span class="sc">~</span> cross_avg_temp <span class="sc">+</span> <span class="fu">ns</span>(month, <span class="at">df =</span> <span class="dv">4</span>) <span class="sc">+</span> year <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> cluster) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> country), <span class="at">data =</span> data, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">control =</span> <span class="fu">glmmTMBControl</span>(<span class="at">optCtrl =</span> <span class="fu">list</span>(<span class="at">iter.max =</span> <span class="dv">1000</span>, <span class="at">eval.max =</span> <span class="dv">1000</span>)))</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>ref <span class="ot">&lt;-</span> <span class="dv">26</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>pred_avg_temp <span class="ot">&lt;-</span> <span class="fu">crosspred</span>(cross_avg_temp, <span class="at">coef =</span> <span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond[,<span class="dv">1</span>][<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)], <span class="at">vcov =</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>), <span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)], <span class="at">cen =</span> ref, <span class="at">model.link =</span> <span class="st">"logit"</span>, <span class="at">at =</span> <span class="fu">seq</span>(<span class="at">from =</span> <span class="dv">18</span>, <span class="at">to =</span> <span class="dv">30</span>, <span class="at">by =</span> <span class="fl">0.1</span>), <span class="at">bylag =</span> <span class="fl">0.1</span>, <span class="at">cumul =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pred_avg_temp, <span class="st">"overall"</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>, <span class="at">main =</span> <span class="st">"Overall effect of average temperature, ref. 26°C"</span>, <span class="at">ylab =</span> <span class="st">"OR"</span>, <span class="at">xlab =</span> <span class="st">"Average Temperature (°C)"</span>, <span class="at">ci.arg =</span> <span class="fu">list</span>(<span class="at">col =</span> <span class="fu">adjustcolor</span>(<span class="dv">1</span>, <span class="at">alpha.f =</span> <span class="fl">0.2</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_simulation_malaria_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="interactions" class="level3">
+<h3 class="anchored" data-anchor-id="interactions">Interactions</h3>
+<p>The following code illustrates how the interaction between the cross-basis matrix and an effect modifier was implemented in the original analysis. In this script, the interaction between a binary variable and a numerical variable is considered. Further details on interaction effects are provided in the Supplementary Material of the paper.</p>
+<p>The variables are generated randomly, so no true effect is expected. This example is intended solely for illustrative purposes.</p>
+<p>The binary variable is simulated from a bernoulli distribution with <span class="math inline">\(p = 0.5\)</span>, and the numerical variable is simulated from a standard normal distribution. They can be interpreted as a gender variable and a wealth index, respectively.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># simulation gender</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># reference category (0) = female</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>gender <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="at">size =</span> <span class="dv">1</span>, <span class="at">p =</span> <span class="fl">0.5</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="co"># simulation wealth index</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>index <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We start with the binary variable. An interaction between the cross-basis matrix and gender is specified and included in the model.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>mixed_log <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(y <span class="sc">~</span> cross_avg_temp<span class="sc">*</span>gender <span class="sc">+</span> <span class="fu">ns</span>(month, <span class="at">df =</span> <span class="dv">4</span>) <span class="sc">+</span> year <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> cluster) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> country), <span class="at">data =</span> data, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">control =</span> <span class="fu">glmmTMBControl</span>(<span class="at">optCtrl =</span> <span class="fu">list</span>(<span class="at">iter.max =</span> <span class="dv">1000</span>, <span class="at">eval.max =</span> <span class="dv">1000</span>)))</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>pred_avg_temp_sexF <span class="ot">&lt;-</span> <span class="fu">crosspred</span>(cross_avg_temp, <span class="at">coef =</span> <span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond[,<span class="dv">1</span>][<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)], <span class="at">vcov =</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>), <span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)], <span class="at">cen =</span> ref, <span class="at">model.link =</span> <span class="st">"logit"</span>, <span class="at">at =</span> <span class="fu">seq</span>(<span class="at">from =</span> <span class="dv">18</span>, <span class="at">to =</span> <span class="dv">30</span>, <span class="at">by =</span> <span class="fl">0.1</span>), <span class="at">cumul =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>b1 <span class="ot">&lt;-</span> <span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond[,<span class="dv">1</span>][<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)]</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>b2 <span class="ot">&lt;-</span> <span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond[, <span class="dv">1</span>][(<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond))]</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>sum_b1_b2 <span class="ot">&lt;-</span> b1 <span class="sc">+</span> b2</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>V_b1 <span class="ot">&lt;-</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>), <span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)]</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>V_b2 <span class="ot">&lt;-</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[(<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)), (<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond))]</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>V_b1_b2 <span class="ot">&lt;-</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>), (<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond))]</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>V_tot <span class="ot">&lt;-</span> V_b1 <span class="sc">+</span> V_b2 <span class="sc">+</span> V_b1_b2 <span class="sc">+</span> <span class="fu">t</span>(V_b1_b2)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="fu">rownames</span>(V_tot) <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(V_tot) <span class="ot">&lt;-</span> <span class="fu">c</span>()</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>pred_avg_temp_sexM <span class="ot">&lt;-</span> <span class="fu">crosspred</span>(cross_avg_temp, <span class="at">coef =</span> sum_b1_b2, <span class="at">vcov =</span> V_tot, <span class="at">cen =</span> ref, <span class="at">model.link =</span> <span class="st">"logit"</span>, <span class="at">at =</span> <span class="fu">seq</span>(<span class="at">from =</span> <span class="dv">18</span>, <span class="at">to =</span> <span class="dv">30</span>, <span class="at">by =</span> <span class="fl">0.1</span>), <span class="at">cumul =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pred_avg_temp_sexF, <span class="st">"overall"</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>, <span class="at">main =</span> <span class="st">"Overall effect of average temperature, ref. 26°C"</span>, <span class="at">ylab =</span> <span class="st">"OR"</span>, <span class="at">xlab =</span> <span class="st">"Average Temperature (°C)"</span>, <span class="at">ci.arg =</span> <span class="fu">list</span>(<span class="at">col =</span> <span class="fu">adjustcolor</span>(<span class="dv">1</span>, <span class="at">alpha.f =</span> <span class="fl">0.2</span>)), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="fu">min</span>(<span class="fu">c</span>(pred_avg_temp_sexF<span class="sc">$</span>cumRRlow[, <span class="dv">6</span>], pred_avg_temp_sexM<span class="sc">$</span>cumRRlow[, <span class="dv">6</span>])), <span class="fu">max</span>(<span class="fu">c</span>(pred_avg_temp_sexF<span class="sc">$</span>cumRRhigh[, <span class="dv">6</span>], pred_avg_temp_sexM<span class="sc">$</span>cumRRhigh[, <span class="dv">6</span>]))))</span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(pred_avg_temp_sexM, <span class="st">"overall"</span>, <span class="at">ci =</span> <span class="st">"area"</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>, <span class="at">main =</span> <span class="st">"Overall effect of average temperature, ref. 26°C"</span>, <span class="at">ylab =</span> <span class="st">"OR"</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">ci.arg =</span> <span class="fu">list</span>(<span class="at">col =</span> <span class="fu">adjustcolor</span>(<span class="dv">2</span>, <span class="at">alpha.f =</span> <span class="fl">0.2</span>)))</span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="fu">paste</span>(<span class="st">"Sex ="</span>, <span class="fu">c</span>(<span class="st">"Female"</span>, <span class="st">"Male"</span>)), <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_simulation_malaria_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The Likelihood Ratio Test (LRT) is specified as:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>mixed_log0 <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(y <span class="sc">~</span> cross_avg_temp <span class="sc">+</span> gender <span class="sc">+</span> <span class="fu">ns</span>(month, <span class="at">df =</span> <span class="dv">4</span>) <span class="sc">+</span> year <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> cluster) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> country), <span class="at">data =</span> data, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">control =</span> <span class="fu">glmmTMBControl</span>(<span class="at">optCtrl =</span> <span class="fu">list</span>(<span class="at">iter.max =</span> <span class="dv">1000</span>, <span class="at">eval.max =</span> <span class="dv">1000</span>)))</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(mixed_log0, mixed_log, <span class="at">test =</span> <span class="st">"Chisq"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data: data
+Models:
+mixed_log0: y ~ cross_avg_temp + gender + ns(month, df = 4) + year + (1 | , zi=~0, disp=~1
+mixed_log0:     cluster) + (1 | country), zi=~0, disp=~1
+mixed_log: y ~ cross_avg_temp * gender + ns(month, df = 4) + year + (1 | , zi=~0, disp=~1
+mixed_log:     cluster) + (1 | country), zi=~0, disp=~1
+           Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(&gt;Chisq)
+mixed_log0 18 253428 253621 -126696   253392                         
+mixed_log  27 253439 253729 -126692   253385 6.7773      9     0.6603</code></pre>
+</div>
+</div>
+<p>We continue with the numerical variable. Effects are evaluated at the 1st and 3rd quartile.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>mixed_log <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(y <span class="sc">~</span> cross_avg_temp<span class="sc">*</span>index <span class="sc">+</span> <span class="fu">ns</span>(month, <span class="at">df =</span> <span class="dv">4</span>) <span class="sc">+</span> year <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> cluster) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> country), <span class="at">data =</span> data, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">control =</span> <span class="fu">glmmTMBControl</span>(<span class="at">optCtrl =</span> <span class="fu">list</span>(<span class="at">iter.max =</span> <span class="dv">1000</span>, <span class="at">eval.max =</span> <span class="dv">1000</span>)))</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>quant <span class="ot">&lt;-</span> <span class="fu">quantile</span>(data<span class="sc">$</span>index, <span class="fu">c</span>(<span class="fl">0.25</span>, <span class="fl">0.75</span>), <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>b1 <span class="ot">&lt;-</span> <span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond[,<span class="dv">1</span>][<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)]</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>b2 <span class="ot">&lt;-</span> <span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond[, <span class="dv">1</span>][(<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond))]</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>sum_b1_b2 <span class="ot">&lt;-</span> b1 <span class="sc">+</span> b2<span class="sc">*</span>quant[<span class="dv">1</span>]</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>V_b1 <span class="ot">&lt;-</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>), <span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)]</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>V_b2 <span class="ot">&lt;-</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[(<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)), (<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond))]</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>V_b1_b2 <span class="ot">&lt;-</span> <span class="fu">vcov</span>(mixed_log)<span class="sc">$</span>cond[<span class="dv">2</span><span class="sc">:</span>(<span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>), (<span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond)) <span class="sc">-</span> <span class="fu">ncol</span>(cross_avg_temp) <span class="sc">+</span> <span class="dv">1</span>)<span class="sc">:</span><span class="fu">nrow</span>((<span class="fu">summary</span>(mixed_log)<span class="sc">$</span>coef<span class="sc">$</span>cond))]</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a>V_tot <span class="ot">&lt;-</span> V_b1 <span class="sc">+</span> (quant[<span class="dv">1</span>]<span class="sc">^</span><span class="dv">2</span>)<span class="sc">*</span>V_b2 <span class="sc">+</span> quant[<span class="dv">1</span>]<span class="sc">*</span>(V_b1_b2 <span class="sc">+</span> <span class="fu">t</span>(V_b1_b2))</span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>pred_avg_temp_indexL <span class="ot">&lt;-</span> <span class="fu">crosspred</span>(cross_avg_temp, <span class="at">coef =</span> sum_b1_b2, <span class="at">vcov =</span> V_tot, <span class="at">cen =</span> ref, <span class="at">model.link =</span> <span class="st">"logit"</span>, <span class="at">at =</span> <span class="fu">seq</span>(<span class="at">from =</span> <span class="dv">18</span>, <span class="at">to =</span> <span class="dv">30</span>, <span class="at">by =</span> <span class="fl">0.1</span>), <span class="at">cumul =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>sum_b1_b2 <span class="ot">&lt;-</span> b1 <span class="sc">+</span> b2<span class="sc">*</span>quant[<span class="dv">2</span>]</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>V_tot <span class="ot">&lt;-</span> V_b1 <span class="sc">+</span> (quant[<span class="dv">2</span>]<span class="sc">^</span><span class="dv">2</span>)<span class="sc">*</span>V_b2 <span class="sc">+</span> quant[<span class="dv">2</span>]<span class="sc">*</span>(V_b1_b2 <span class="sc">+</span> <span class="fu">t</span>(V_b1_b2))</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>pred_avg_temp_indexH <span class="ot">&lt;-</span> <span class="fu">crosspred</span>(cross_avg_temp, <span class="at">coef =</span> sum_b1_b2, <span class="at">vcov =</span> V_tot, <span class="at">cen =</span> ref, <span class="at">model.link =</span> <span class="st">"logit"</span>, <span class="at">at =</span> <span class="fu">seq</span>(<span class="at">from =</span> <span class="dv">18</span>, <span class="at">to =</span> <span class="dv">30</span>, <span class="at">by =</span> <span class="fl">0.1</span>), <span class="at">cumul =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(pred_avg_temp_indexL, <span class="st">"overall"</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>, <span class="at">main =</span> <span class="st">"Overall effect of average temperature, ref. 26°C"</span>, <span class="at">ylab =</span> <span class="st">"OR"</span>, <span class="at">xlab =</span> <span class="st">"Average Temperature (°C)"</span>, <span class="at">ci.arg =</span> <span class="fu">list</span>(<span class="at">col =</span> <span class="fu">adjustcolor</span>(<span class="dv">1</span>, <span class="at">alpha.f =</span> <span class="fl">0.2</span>)), <span class="at">ylim =</span> <span class="fu">c</span>(<span class="fu">min</span>(<span class="fu">c</span>(pred_avg_temp_indexL<span class="sc">$</span>cumRRlow[, <span class="dv">6</span>], pred_avg_temp_indexH<span class="sc">$</span>cumRRlow[, <span class="dv">6</span>])), <span class="fu">max</span>(<span class="fu">c</span>(pred_avg_temp_indexL<span class="sc">$</span>cumRRhigh[, <span class="dv">6</span>], pred_avg_temp_indexH<span class="sc">$</span>cumRRhigh[, <span class="dv">6</span>]))))</span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a><span class="fu">lines</span>(pred_avg_temp_indexH, <span class="st">"overall"</span>, <span class="at">ci =</span> <span class="st">"area"</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>, <span class="at">main =</span> <span class="st">"Overall effect of average temperature, ref. 26°C"</span>, <span class="at">ylab =</span> <span class="st">"OR"</span>, <span class="at">col =</span> <span class="dv">2</span>, <span class="at">ci.arg =</span> <span class="fu">list</span>(<span class="at">col =</span> <span class="fu">adjustcolor</span>(<span class="dv">2</span>, <span class="at">alpha.f =</span> <span class="fl">0.2</span>)))</span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a><span class="fu">legend</span>(<span class="st">"topright"</span>, <span class="fu">c</span>(<span class="st">"Low wealth index"</span>, <span class="st">"High wealth index"</span>), <span class="at">col =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="at">lwd =</span> <span class="fl">1.5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Data_simulation_malaria_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The LRT is specified as:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>mixed_log0 <span class="ot">&lt;-</span> <span class="fu">glmmTMB</span>(y <span class="sc">~</span> cross_avg_temp <span class="sc">+</span> index <span class="sc">+</span> <span class="fu">ns</span>(month, <span class="at">df =</span> <span class="dv">4</span>) <span class="sc">+</span> year <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> cluster) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> country), <span class="at">data =</span> data, <span class="at">family =</span> <span class="fu">binomial</span>(<span class="at">link =</span> <span class="st">"logit"</span>), <span class="at">control =</span> <span class="fu">glmmTMBControl</span>(<span class="at">optCtrl =</span> <span class="fu">list</span>(<span class="at">iter.max =</span> <span class="dv">1000</span>, <span class="at">eval.max =</span> <span class="dv">1000</span>)))</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">anova</span>(mixed_log0, mixed_log, <span class="at">test =</span> <span class="st">"Chisq"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Data: data
+Models:
+mixed_log0: y ~ cross_avg_temp + index + ns(month, df = 4) + year + (1 | , zi=~0, disp=~1
+mixed_log0:     cluster) + (1 | country), zi=~0, disp=~1
+mixed_log: y ~ cross_avg_temp * index + ns(month, df = 4) + year + (1 | , zi=~0, disp=~1
+mixed_log:     cluster) + (1 | country), zi=~0, disp=~1
+           Df    AIC    BIC  logLik deviance  Chisq Chi Df Pr(&gt;Chisq)
+mixed_log0 18 253425 253618 -126694   253389                         
+mixed_log  27 253436 253727 -126691   253382 6.4252      9     0.6967</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
+<p>[1] Gasparrini, Antonio. “A tutorial on the case time series design for small-area analysis.” BMC medical research methodology 22.1 (2022): 129.</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
